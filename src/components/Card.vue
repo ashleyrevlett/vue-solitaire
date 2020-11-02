@@ -20,7 +20,6 @@ export default {
     rank: String,
     suit: String,
     faceup: Boolean,
-    selected: Boolean,
     location: String,
     pileIndex: Number,
   },
@@ -28,10 +27,21 @@ export default {
     symbol: function() {
       return Suits[this.suit];
     },
+    selected: function() {
+      return (
+        this.$store.getters.selectedCard &&
+        this.$store.getters.selectedCard.rank == this.rank &&
+        this.$store.getters.selectedCard.suit == this.suit
+      );
+    },
+    displayName: function() {
+      return `${this.rank} of ${this.suit} (location: ${this.location}, index ${this.pileIndex})`;
+    },
   },
   methods: {
     selectCard() {
-      this.$emit("select-card", this); // in case another card has been selected already
+      // can only select faceup card
+      if (this.faceup) this.$store.commit("SET_SELECTED", this);
     },
   },
 };

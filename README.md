@@ -35,7 +35,6 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 
 ## #TODO
 
-- Refactor to use vuex for state management
 - Fix use of enums for Locations, Ranks, etc.
 - Add win/lose conditions and animations
 - Better undo support

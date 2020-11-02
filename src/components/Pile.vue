@@ -10,17 +10,11 @@
       :faceup="d.faceup"
       :suit="d.suit"
       :rank="d.rank"
-      :location="location"
-      :pileIndex="pileIndex"
-      :selected="
-        selectedCard &&
-          d.rank === selectedCard.rank &&
-          d.suit === selectedCard.suit
-      "
-      v-on="$listeners"
+      :location="d.location"
+      :pileIndex="d.pileIndex"
     />
     <div
-      v-if="cards.length === 0"
+      v-if="!cards || cards.length === 0"
       class="card empty-pile"
       @click="selectEmpty"
     ></div>
@@ -37,9 +31,8 @@ export default {
   props: {
     cards: Array,
     fanned: Boolean,
-    selectedCard: Object,
-    location: String,
     pileIndex: Number,
+    location: String,
   },
   methods: {
     selectEmpty() {
@@ -47,7 +40,10 @@ export default {
         pileIndex: this.pileIndex,
         location: this.location,
       };
-      this.$emit("select-empty", card);
+      this.$store.dispatch("playCard", {
+        oldCard: this.$store.getters.selectedCard,
+        newCard: card,
+      });
     },
   },
 };
