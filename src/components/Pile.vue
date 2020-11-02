@@ -1,11 +1,11 @@
 <template>
   <div
-    class="pile"
+    class="pile mr-4"
     :fanned="fanned"
     :class="[fanned ? 'fanned-down' : 'stacked']"
   >
     <Card
-      v-for="d in cards"
+      v-for="d in displayCards"
       :key="d.rank + '-' + d.suit"
       :faceup="d.faceup"
       :suit="d.suit"
@@ -14,13 +14,14 @@
       :pileIndex="d.pileIndex"
     />
     <div
-      v-if="!cards || cards.length === 0"
+      v-if="!displayCards || displayCards.length === 0"
       class="card empty-pile"
       @click="selectEmpty"
     ></div>
   </div>
 </template>
 <script>
+import { last } from "lodash";
 import Card from "./Card.vue";
 
 export default {
@@ -34,9 +35,22 @@ export default {
     pileIndex: Number,
     location: String,
   },
+  computed: {
+    displayCards: function() {
+      if (this.fanned) {
+        return this.cards;
+      } else if (last(this.cards)) {
+        return [last(this.cards)];
+      } else {
+        return null;
+      }
+    },
+  },
   methods: {
     selectEmpty() {
-      let card = {
+      if (!this.$store.getters.selectedCard) return;
+
+      const card = {
         pileIndex: this.pileIndex,
         location: this.location,
       };
@@ -51,31 +65,25 @@ export default {
 
 <style lang="scss">
 .pile {
-  margin: 5px;
-
   &.fanned-down {
     .card:not(:first-child) {
-      margin-top: -70px;
+      margin-top: calc(0.12 * 100vw * -1.05);
     }
     .card.facedown:not(:first-child) {
-      margin-top: -90px;
+      margin-top: calc(0.12 * 100vw * -1.3);
     }
     .card.facedown + .card.faceup {
-      margin-top: -90px;
+      margin-top: calc(0.12 * 100vw * -1.3);
     }
   }
 
-  .empty-pile {
-    border: 2px dashed black;
-  }
+  // &.stacked {
+  //   position: relative;
+  //   width: 60px;
 
-  &.stacked {
-    position: relative;
-    width: 60px;
-
-    .card {
-      position: absolute;
-    }
-  }
+  //   .card {
+  //     position: absolute;
+  //   }
+  // }
 }
 </style>

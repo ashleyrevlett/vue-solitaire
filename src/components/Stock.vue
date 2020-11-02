@@ -1,14 +1,19 @@
 <template>
   <section>
-    <button @click="undo">Undo</button>
     <div class="draw-piles flex mr-auto">
-      <div class="draw-pile pile">
+      <div class="draw-pile pile mr-4">
         <div
           v-if="deck.length == 0"
           class="card empty-pile"
           @click="flipWaste"
         ></div>
-        <div v-else class="card facedown" v-on:click="draw"></div>
+        <Card
+          v-else
+          key="draw"
+          :faceup="false"
+          location="DECK"
+          @clicked="draw"
+        />
       </div>
 
       <div class="waste pile">
@@ -40,7 +45,7 @@ export default {
     ...mapGetters(["deck", "waste", "topWaste", "selectedCard"]),
   },
   methods: {
-    ...mapActions(["draw", "undo", "flipWaste"]),
+    ...mapActions(["draw", "flipWaste"]),
   },
 };
 </script>

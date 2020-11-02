@@ -2,14 +2,9 @@
   <div
     class="card"
     :class="[suit, faceup ? 'faceup' : 'facedown', selected ? 'selected' : '']"
-    v-on:click="selectCard"
-  >
-    <div class="face" v-if="faceup">
-      <span class="suit">{{ symbol }}</span>
-      <span class="rank">{{ rank }}</span>
-    </div>
-    <div class="back" v-if="!faceup"></div>
-  </div>
+    :style="cardStyle"
+    @click="selectCard"
+  ></div>
 </template>
 <script>
 import { Suits } from "../constants/constants.js";
@@ -37,11 +32,26 @@ export default {
     displayName: function() {
       return `${this.rank} of ${this.suit} (location: ${this.location}, index ${this.pileIndex})`;
     },
+    cardStyle: function() {
+      let src = require(`@/assets/images/BACK.png`);
+      if (this.faceup) {
+        src = require(`@/assets/images/${this.rank}_${this.suit}.png`);
+      }
+      return {
+        backgroundImage: "url(" + src + ")",
+      };
+    },
   },
   methods: {
     selectCard() {
-      // can only select faceup card
-      if (this.faceup) this.$store.commit("SET_SELECTED", this);
+      if (this.faceup) {
+        // can only select faceup card
+        console.log("card clicked:", this);
+        this.$store.commit("SET_SELECTED", this);
+      } else {
+        // facedown draw pile click event
+        this.$emit("clicked");
+      }
     },
   },
 };
@@ -49,26 +59,28 @@ export default {
 
 <style lang="scss">
 .card {
-  height: 100px;
-  width: 60px;
-  background: white;
-  color: black;
+  width: calc(0.12 * 100vw);
+  padding-bottom: calc(0.12 * 100vw * 1.45);
+  background-color: white;
+  background-size: contain;
+  background-repeat: no-repeat;
   border-radius: 6px;
-  border: 3px solid black;
-  padding: 3px;
+  position: relative;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.3);
   cursor: pointer;
 
-  &.facedown {
-    background: blue;
-  }
-
-  &.HEARTS,
-  &.DIAMONDS {
-    color: red;
-  }
-
   &.selected {
-    border-color: yellow;
+    box-shadow: 0 0 0 3px yellow;
+  }
+
+  &.facedown {
+    background-size: cover;
+  }
+
+  &.empty-pile {
+    background: none;
+    border: 2px dashed black;
+    box-shadow: none;
   }
 }
 </style>

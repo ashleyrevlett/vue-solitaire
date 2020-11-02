@@ -39,7 +39,10 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - Add win/lose conditions and animations
 - Better undo support
 - Keyboard controls
-- Responsive layout
 - Visual design & animations
 - Auto-complete when win is apparent
 - Choose 1-card or 3-card draw
+
+## CREDITS
+
+- Open source card images from https://github.com/hayeah/playing-cards-assets

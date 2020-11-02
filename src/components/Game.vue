@@ -1,10 +1,13 @@
 <template>
   <div class="game">
-    <button @click="redeal">New Game</button>
-    <div class="flex">
-      <Stock />
+    <div class="tools w-full mb-4">
+      <button @click="redeal">New Game</button>
+      <button @click="undo">Undo</button>
+    </div>
 
-      <div class="foundation-piles flex">
+    <div class="flex justify-between items-start mb-4">
+      <Stock />
+      <section class="foundation-piles flex">
         <Pile
           v-for="(pile, idx) in foundations"
           :key="'foundation-' + idx"
@@ -12,10 +15,10 @@
           :pileIndex="idx"
           location="FOUNDATION"
         />
-      </div>
+      </section>
     </div>
 
-    <div class="tableau-piles flex">
+    <section class="tableau-piles flex justify-between mb-4">
       <Pile
         v-for="(pile, idx) in tableau"
         :key="'tableau-' + idx"
@@ -24,7 +27,7 @@
         :pileIndex="idx"
         location="TABLEAU"
       />
-    </div>
+    </section>
   </div>
 </template>
 
@@ -54,7 +57,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(["redeal"]),
+    ...mapActions(["redeal", "undo"]),
   },
   created: function() {
     this.redeal();
@@ -66,12 +69,12 @@ export default {
 body {
   padding: 0;
   margin: 0;
+  background: #477148;
+  color: white;
 }
 
 .game {
-  background: #477148;
-  color: white;
-  padding: 100px;
+  padding: 0 3vw;
   min-height: 100vh;
 }
 </style>
