@@ -33,10 +33,10 @@ export default {
       return `${this.rank} of ${this.suit} (location: ${this.location}, index ${this.pileIndex})`;
     },
     cardStyle: function() {
-      let src = require(`@/assets/images/BACK.png`);
-      if (this.faceup) {
-        src = require(`@/assets/images/${this.rank}_${this.suit}.png`);
-      }
+      let src = this.faceup
+        ? require(`@/assets/images/${this.rank.charAt(0) +
+            this.suit.charAt(0)}.svg`)
+        : require(`@/assets/images/BACK2.svg`); //BACK1.PNG, BACK2.SVG, BACK3.PNG
       return {
         backgroundImage: "url(" + src + ")",
       };
@@ -46,7 +46,6 @@ export default {
     selectCard() {
       if (this.faceup) {
         // can only select faceup card
-        console.log("card clicked:", this);
         this.$store.commit("SET_SELECTED", this);
       } else {
         // facedown draw pile click event
@@ -60,11 +59,11 @@ export default {
 <style lang="scss">
 .card {
   width: calc(0.12 * 100vw);
-  padding-bottom: calc(0.12 * 100vw * 1.45);
+  padding-bottom: calc(0.12 * 100vw * 1.4);
   background-color: white;
   background-size: contain;
   background-repeat: no-repeat;
-  border-radius: 6px;
+  border-radius: 10px;
   position: relative;
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.3);
   cursor: pointer;
@@ -78,9 +77,8 @@ export default {
   }
 
   &.empty-pile {
-    background: none;
-    border: 2px dashed black;
-    box-shadow: none;
+    background: rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
   }
 }
 </style>

@@ -67,23 +67,13 @@ export default {
 .pile {
   &.fanned-down {
     .card:not(:first-child) {
-      margin-top: calc(0.12 * 100vw * -1.05);
+      margin-top: calc(-0.125 * 100vw);
+      // margin-top: calc(0.12 * 100vw * -1.05);
     }
-    .card.facedown:not(:first-child) {
-      margin-top: calc(0.12 * 100vw * -1.3);
-    }
+    .card.facedown:not(:first-child),
     .card.facedown + .card.faceup {
-      margin-top: calc(0.12 * 100vw * -1.3);
+      margin-top: calc(-0.155 * 100vw);
     }
   }
-
-  // &.stacked {
-  //   position: relative;
-  //   width: 60px;
-
-  //   .card {
-  //     position: absolute;
-  //   }
-  // }
 }
 </style>

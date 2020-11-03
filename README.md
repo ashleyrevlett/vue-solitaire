@@ -42,7 +42,8 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - Visual design & animations
 - Auto-complete when win is apparent
 - Choose 1-card or 3-card draw
+- Sound effects
 
 ## CREDITS
 
-- Open source card images from https://github.com/hayeah/playing-cards-assets
+- Card images from https://www.me.uk/cards/

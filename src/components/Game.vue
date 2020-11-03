@@ -77,4 +77,12 @@ body {
   padding: 0 3vw;
   min-height: 100vh;
 }
+
+.tools button {
+  border: 1px solid white;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  margin: 1rem 0.5rem 1rem 0;
+  font-size: 0.9rem;
+}
 </style>
