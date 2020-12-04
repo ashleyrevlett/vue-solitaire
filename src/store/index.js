@@ -136,7 +136,7 @@ export default new Vuex.Store({
       state.gameState = GameStates.PLAY;
       state.deck = shuffle(buildDeck());
     },
-    UPDATE_WIN_STATE(state) {
+    UPDATE_GAME_STATE(state) {
       // check for winning state
       let didWin = true;
       state.foundations.forEach((foundation) => {
@@ -182,7 +182,7 @@ export default new Vuex.Store({
   actions: {
     testWin({ commit }) {
       commit("WIN_TEST");
-      commit("UPDATE_WIN_STATE");
+      commit("UPDATE_GAME_STATE");
     },
     draw({ commit }) {
       commit("DRAW_CARD");
@@ -250,7 +250,7 @@ export default new Vuex.Store({
       commit("SET_SELECTED", null);
 
       // end move
-      commit("UPDATE_WIN_STATE");
+      commit("UPDATE_GAME_STATE");
     },
   },
 });
