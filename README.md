@@ -35,14 +35,14 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 
 ## #TODO
 
-- Fix use of enums for Locations, Ranks, etc.
-- Add win/lose conditions and animations
+- Add lose condition
 - Better undo support
 - Keyboard controls
 - Visual design & animations
 - Auto-complete when win is apparent
 - Choose 1-card or 3-card draw
 - Sound effects
+- Bug: cards can go offscreen vertically
 
 ## CREDITS
 

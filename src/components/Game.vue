@@ -1,11 +1,14 @@
 <template>
   <div class="game">
+    <win-screen v-if="gameState == 'WIN'" />
+
     <div class="tools w-full mb-4">
       <button @click="redeal">New Game</button>
       <button @click="undo">Undo</button>
+      <button @click="testWin">Test Win</button>
     </div>
 
-    <div class="flex justify-between items-start mb-4">
+    <div id="top-row" class="flex justify-between items-start mb-4">
       <Stock />
       <section class="foundation-piles flex">
         <Pile
@@ -35,15 +38,23 @@
 import { mapGetters, mapActions } from "vuex";
 import Pile from "./Pile.vue";
 import Stock from "./Stock.vue";
+import WinScreen from "./WinScreen.vue";
 
 export default {
   name: "Game",
   components: {
     Stock,
     Pile,
+    WinScreen,
   },
   computed: {
-    ...mapGetters(["deck", "tableau", "foundations", "selectedCard"]),
+    ...mapGetters([
+      "deck",
+      "tableau",
+      "foundations",
+      "selectedCard",
+      "gameState",
+    ]),
   },
   watch: {
     selectedCard: function(newCard, oldCard) {
@@ -57,7 +68,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions(["redeal", "undo"]),
+    ...mapActions(["redeal", "undo", "testWin"]),
   },
   created: function() {
     this.redeal();
@@ -78,7 +89,7 @@ body {
   min-height: 100vh;
 }
 
-.tools button {
+button {
   border: 1px solid white;
   padding: 0.3rem 0.6rem;
   border-radius: 6px;

@@ -1,5 +1,5 @@
 import { last } from "lodash";
-import { RankValues } from "../constants/constants.js";
+import { Suits, Ranks, RankValues } from "../constants/constants.js";
 
 function isSameCard(cardA, cardB) {
   return cardA.suit == cardB.suit && cardA.rank == cardB.rank;
@@ -43,4 +43,20 @@ export function isFoundationPositionValid(from, to, fromPile) {
   }
 
   return false;
+}
+
+export function buildDeck() {
+  let deck = [];
+  Object.keys(Suits).forEach((suit) => {
+    Ranks.forEach((rank) => {
+      const card = {
+        rank,
+        suit,
+        faceup: true,
+        location: "DECK",
+      };
+      deck.push(card);
+    });
+  });
+  return deck;
 }

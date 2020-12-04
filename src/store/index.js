@@ -5,8 +5,9 @@ import { last, findIndex, shuffle } from "lodash";
 import {
   isFoundationPositionValid,
   isTableauPositionValid,
+  buildDeck,
 } from "../utils/utils.js";
-import { Suits, Ranks } from "../constants/constants.js";
+import { Suits, Ranks, GameStates } from "../constants/constants.js";
 
 Vue.use(Vuex);
 
@@ -17,20 +18,15 @@ export default new Vuex.Store({
     waste: [],
     foundations: [[], [], [], []],
     tableau: [[], [], [], [], [], [], []],
+    gameState: GameStates.PLAY,
   },
   mutations: {
     SET_SELECTED(state, card) {
+      if (state.gameState !== GameStates.PLAY) return;
+
       state.selectedCard = state.selectedCard == card ? null : card;
     },
-    MOVE_FOUNDATION_TO_TABLEAU(state, { from, to }) {
-      const top = state.foundations[from.pileIndex].pop();
-      top.location = to.location;
-      top.pileIndex = to.pileIndex;
-      const newColumn = state.tableau[to.pileIndex].slice(0);
-      newColumn.push(top);
-      Vue.set(state.tableau, to.pileIndex, newColumn);
-    },
-    MOVE_WASTE_TO_TABLEAU(state, { location, pileIndex }) {
+    MOVE_WASTE(state, { location, pileIndex }) {
       const top = state.waste.pop();
       if (!top) return;
       top.location = location;
@@ -44,6 +40,26 @@ export default new Vuex.Store({
         newColumn.push(top);
         Vue.set(state.foundations, pileIndex, newColumn);
       }
+    },
+    MOVE_FOUNDATION_TO_TABLEAU(state, { from, to }) {
+      const top = state.foundations[from.pileIndex].pop();
+      top.location = to.location;
+      top.pileIndex = to.pileIndex;
+      const newColumn = state.tableau[to.pileIndex].slice(0);
+      newColumn.push(top);
+      Vue.set(state.tableau, to.pileIndex, newColumn);
+    },
+    MOVE_TABLEAU_TO_FOUNDATION(state, { from, to }) {
+      // assume we get only the top card from a tableau stack
+      const fromPile = state.tableau[from.pileIndex];
+      const top = fromPile.pop();
+      top.pileIndex = to.pileIndex;
+      top.location = "FOUNDATION";
+      const stack = state.foundations[to.pileIndex].slice(0);
+      stack.push(top);
+      Vue.set(state.foundations, to.pileIndex, stack);
+      if (last(state.tableau[from.pileIndex]))
+        last(state.tableau[from.pileIndex]).faceup = true;
     },
     MOVE_TABLEAU_STACK(state, { from, to }) {
       // move 1 or more cards from one tableau pile to another
@@ -63,19 +79,9 @@ export default new Vuex.Store({
       Vue.set(state.tableau, from.pileIndex, fromPile);
       Vue.set(state.tableau, to.pileIndex, toPile);
     },
-    MOVE_TABLEAU_TO_FOUNDATION(state, { from, to }) {
-      // assume we get only the top card from a tableau stack
-      const fromPile = state.tableau[from.pileIndex];
-      const top = fromPile.pop();
-      top.pileIndex = to.pileIndex;
-      top.location = "FOUNDATION";
-      const stack = state.foundations[to.pileIndex].slice(0);
-      stack.push(top);
-      Vue.set(state.foundations, to.pileIndex, stack);
-      if (last(state.tableau[from.pileIndex]))
-        last(state.tableau[from.pileIndex]).faceup = true;
-    },
     DRAW_CARD(state) {
+      if (state.gameState !== GameStates.PLAY) return;
+
       // turn card from deck to waste
       const top = state.deck.pop();
       if (top) {
@@ -85,6 +91,8 @@ export default new Vuex.Store({
       }
     },
     DRAW_CARD_REVERSE(state) {
+      if (state.gameState !== GameStates.PLAY) return;
+
       // turn card from waste to deck
       const top = state.waste.pop();
       if (top) {
@@ -125,7 +133,27 @@ export default new Vuex.Store({
       state.tableau = [[], [], [], [], [], [], []];
       state.waste = [];
       state.deck = [];
-      Object.keys(Suits).forEach((suit) => {
+      state.gameState = GameStates.PLAY;
+      state.deck = shuffle(buildDeck());
+    },
+    UPDATE_WIN_STATE(state) {
+      // check for winning state
+      let didWin = true;
+      state.foundations.forEach((foundation) => {
+        if (foundation.length != 13) {
+          didWin = false;
+          return;
+        }
+      });
+      if (didWin) {
+        state.gameState = GameStates.WIN;
+      }
+    },
+    WIN_TEST(state) {
+      // reset game state to winning condition
+      let foundations = [];
+      Object.keys(Suits).forEach((suit, i) => {
+        foundations.push([]);
         Ranks.forEach((rank) => {
           const card = {
             rank,
@@ -133,10 +161,13 @@ export default new Vuex.Store({
             faceup: true,
             location: "DECK",
           };
-          state.deck.push(card);
+          foundations[i].push(card);
         });
       });
-      state.deck = shuffle(state.deck);
+      state.foundations = foundations;
+      state.tableau = [[], [], [], [], [], [], []];
+      state.waste = [];
+      state.deck = [];
     },
   },
   getters: {
@@ -146,8 +177,13 @@ export default new Vuex.Store({
     topWaste: (state) => last(state.waste),
     tableau: (state) => state.tableau,
     foundations: (state) => state.foundations,
+    gameState: (state) => state.gameState,
   },
   actions: {
+    testWin({ commit }) {
+      commit("WIN_TEST");
+      commit("UPDATE_WIN_STATE");
+    },
     draw({ commit }) {
       commit("DRAW_CARD");
       commit("SET_SELECTED", null);
@@ -183,7 +219,7 @@ export default new Vuex.Store({
       // otherwise, make the move
       switch (from.location) {
         case "WASTE":
-          commit("MOVE_WASTE_TO_TABLEAU", {
+          commit("MOVE_WASTE", {
             location: to.location,
             pileIndex: to.pileIndex,
           });
@@ -212,6 +248,9 @@ export default new Vuex.Store({
       }
       // reset selected card
       commit("SET_SELECTED", null);
+
+      // end move
+      commit("UPDATE_WIN_STATE");
     },
   },
 });

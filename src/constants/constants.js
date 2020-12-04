@@ -37,9 +37,8 @@ export const RankValues = {
   K: 13,
 };
 
-export const Locations = {
-  FOUNDATION: "FOUNDATION",
-  PILE: "PILE",
-  WASTE: "WASTE",
-  DECK: "DECK",
+export const GameStates = {
+  PLAY: "PLAY",
+  WIN: "WIN",
+  LOSE: "LOSE",
 };
