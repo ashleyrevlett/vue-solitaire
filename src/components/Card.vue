@@ -1,13 +1,20 @@
 <template>
   <div
     class="card"
-    :class="[suit, faceup ? 'faceup' : 'facedown', selected ? 'selected' : '']"
+    :class="[
+      suit,
+      faceup ? 'faceup' : 'facedown',
+      selected ? 'selected' : '',
+      isUnderCursor ? 'highlighted' : '',
+      !rank && !suit ? 'empty-pile' : '',
+    ]"
     :style="cardStyle"
     @click="selectCard"
   ></div>
 </template>
+
 <script>
-import { Suits } from "../constants/constants.js";
+import { mapGetters } from "vuex";
 
 export default {
   name: "Card",
@@ -15,24 +22,38 @@ export default {
     rank: String,
     suit: String,
     faceup: Boolean,
-    location: String,
     pileIndex: Number,
   },
   computed: {
-    symbol: function() {
-      return Suits[this.suit];
-    },
+    ...mapGetters(["selectedCard", "cursorPosition", "cardUnderCursor"]),
+
     selected: function() {
       return (
-        this.$store.getters.selectedCard &&
-        this.$store.getters.selectedCard.rank == this.rank &&
-        this.$store.getters.selectedCard.suit == this.suit
+        this.selectedCard &&
+        this.selectedCard.rank == this.rank &&
+        this.selectedCard.suit == this.suit
       );
     },
-    displayName: function() {
-      return `${this.rank} of ${this.suit} (location: ${this.location}, index ${this.pileIndex})`;
+    isUnderCursor: function() {
+      if (!this.rank || !this.suit) {
+        // empty card
+        if (this.cursorPosition[0] === this.pileIndex) return true;
+        else return false;
+      } else {
+        // normal card
+        if (
+          this.cardUnderCursor &&
+          this.cardUnderCursor.rank == this.rank &&
+          this.cardUnderCursor.suit == this.suit
+        ) {
+          return true;
+        }
+        return false;
+      }
     },
     cardStyle: function() {
+      if (!this.suit) return null;
+
       let src = this.faceup
         ? require(`@/assets/images/${this.rank.charAt(0) +
             this.suit.charAt(0)}.svg`)
@@ -44,13 +65,13 @@ export default {
   },
   methods: {
     selectCard() {
-      if (this.faceup) {
-        // can only select faceup card
-        this.$store.commit("SET_SELECTED", this);
-      } else {
-        // facedown draw pile click event
-        this.$emit("clicked");
-      }
+      const card = {
+        rank: this.rank,
+        suit: this.suit,
+        faceup: this.faceup,
+        pileIndex: this.pileIndex,
+      };
+      this.$root.$emit("card-click", card);
     },
   },
 };
@@ -70,6 +91,10 @@ export default {
 
   &.selected {
     box-shadow: 0 0 0 3px yellow;
+  }
+
+  &.highlighted {
+    box-shadow: 0 0 0 3px blue !important;
   }
 
   &.facedown {

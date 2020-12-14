@@ -2,93 +2,113 @@
   <div class="game">
     <win-screen v-if="gameState == 'WIN'" />
 
+    <game-cursor></game-cursor>
+
     <div class="tools w-full mb-4">
       <button @click="redeal">New Game</button>
       <button @click="undo">Undo</button>
       <button @click="testWin">Test Win</button>
     </div>
 
-    <div id="top-row" class="flex justify-between items-start mb-4">
-      <Stock />
-      <section class="foundation-piles flex">
-        <Pile
-          v-for="(pile, idx) in foundations"
-          :key="'foundation-' + idx"
-          :cards="pile"
-          :pileIndex="idx"
-          location="FOUNDATION"
-        />
-      </section>
-    </div>
-
-    <section class="tableau-piles flex justify-between mb-4">
-      <Pile
-        v-for="(pile, idx) in tableau"
-        :key="'tableau-' + idx"
-        :cards="pile"
-        :fanned="true"
-        :pileIndex="idx"
-        location="TABLEAU"
-      />
-    </section>
+    <game-board></game-board>
   </div>
 </template>
 
 <script>
+// import { findIndex, clone, last } from "lodash";
 import { mapGetters, mapActions } from "vuex";
-import Pile from "./Pile.vue";
-import Stock from "./Stock.vue";
 import WinScreen from "./WinScreen.vue";
+import GameCursor from "./GameCursor.vue";
+import GameBoard from "./GameBoard.vue";
+import { isSameCard } from "../utils/utils";
+import { GameStates } from "../constants/constants.js";
 
 export default {
   name: "Game",
   components: {
-    Stock,
-    Pile,
     WinScreen,
+    GameCursor,
+    GameBoard,
   },
   computed: {
     ...mapGetters([
       "deck",
+      "waste",
       "tableau",
       "foundations",
       "selectedCard",
       "gameState",
+      "cursorPosition",
+      "cardUnderCursor",
+      "pileForCard",
     ]),
   },
-  watch: {
-    selectedCard: function(newCard, oldCard) {
-      /*
-      Watch for player to select a 2nd card
-      then play the previously selected card to that position
-      */
-      if (!oldCard || !newCard) return;
 
-      this.$store.dispatch("playCard", { oldCard, newCard });
-    },
-  },
   methods: {
-    ...mapActions(["redeal", "undo", "testWin"]),
+    ...mapActions([
+      "redeal",
+      "undo",
+      "testWin",
+      "flipWaste",
+      "selectCard",
+      "draw",
+      "moveCard",
+    ]),
+    handleCardClick: function(card) {
+      /*
+      Called when 'card-clicked' event is fired by any card or empty cell
+      */
+      if (this.gameState !== GameStates.PLAY) return;
+
+      // double-select to deselect card
+      if (isSameCard(this.selectedCard, card)) {
+        this.selectCard(null);
+        return;
+      }
+
+      // clicked deck - draw or flip deck
+      if (card.pileIndex == 0) {
+        if (this.deck.length > 0) this.draw();
+        else this.flipWaste();
+        return;
+      } else {
+        // can't select facedown non-empty cards except in deck
+        if (!card.faceup && card.suit) return;
+      }
+
+      // no card held yet
+      if (!this.selectedCard) {
+        // empty pile; ignore click
+        if (card.suit == null) {
+          return;
+        } else {
+          // pick up card
+          this.selectCard(card);
+          return;
+        }
+      }
+
+      // card already held and we just selected where to play it
+      // play to waste pile
+      if (card.pileIndex === 1) {
+        // do not select empty waste
+        if (card.suit) this.selectCard(card);
+      } else {
+        // try to move to tableau and foundation
+        this.moveCard(card);
+      }
+    },
   },
   created: function() {
     this.redeal();
+  },
+  mounted: function() {
+    this.$root.$on("card-click", this.handleCardClick);
   },
 };
 </script>
 
 <style lang="scss">
-body {
-  padding: 0;
-  margin: 0;
-  background: #477148;
-  color: white;
-}
-
-.game {
-  padding: 0 3vw;
-  min-height: 100vh;
-}
-
 button {
   border: 1px solid white;
   padding: 0.3rem 0.6rem;

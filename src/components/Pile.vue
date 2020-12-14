@@ -10,14 +10,14 @@
       :faceup="d.faceup"
       :suit="d.suit"
       :rank="d.rank"
-      :location="d.location"
-      :pileIndex="d.pileIndex"
+      :pileIndex="pileIndex"
     />
-    <div
+    <Card
       v-if="!displayCards || displayCards.length === 0"
-      class="card empty-pile"
-      @click="selectEmpty"
-    ></div>
+      :key="'empty-' + pileIndex"
+      :faceup="false"
+      :pileIndex="pileIndex"
+    />
   </div>
 </template>
 <script>
@@ -33,7 +33,6 @@ export default {
     cards: Array,
     fanned: Boolean,
     pileIndex: Number,
-    location: String,
   },
   computed: {
     displayCards: function() {
@@ -46,20 +45,6 @@ export default {
       }
     },
   },
-  methods: {
-    selectEmpty() {
-      if (!this.$store.getters.selectedCard) return;
-
-      const card = {
-        pileIndex: this.pileIndex,
-        location: this.location,
-      };
-      this.$store.dispatch("playCard", {
-        oldCard: this.$store.getters.selectedCard,
-        newCard: card,
-      });
-    },
-  },
 };
 </script>
 
@@ -68,7 +53,6 @@ export default {
   &.fanned-down {
     .card:not(:first-child) {
       margin-top: calc(-0.125 * 100vw);
-      // margin-top: calc(0.12 * 100vw * -1.05);
     }
     .card.facedown:not(:first-child),
     .card.facedown + .card.faceup {

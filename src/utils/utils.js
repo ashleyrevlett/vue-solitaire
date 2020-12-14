@@ -1,7 +1,8 @@
-import { last } from "lodash";
 import { Suits, Ranks, RankValues } from "../constants/constants.js";
 
-function isSameCard(cardA, cardB) {
+export function isSameCard(cardA, cardB) {
+  if (!cardA || !cardB) return false;
+
   return cardA.suit == cardB.suit && cardA.rank == cardB.rank;
 }
 
@@ -9,7 +10,7 @@ function getSuitColor(suit) {
   return suit == "SPADES" || suit == "CLUBS" ? "BLACK" : "RED";
 }
 
-function getRankDifference(cardA, cardB) {
+export function getRankDifference(cardA, cardB) {
   // cardA - cardB; ie., Jack - 10 = 1
   return RankValues[cardA.rank] - RankValues[cardB.rank];
 }
@@ -25,12 +26,8 @@ export function isTableauPositionValid(from, to) {
   return suitValid && rankValid;
 }
 
-export function isFoundationPositionValid(from, to, fromPile) {
-  // cannot play non-top card in tableau to foundation
-  if (fromPile) {
-    let top = last(fromPile);
-    if (!isSameCard(top, from)) return false;
-  }
+export function isFoundationPositionValid(from, to) {
+  // assume we only pass top cards, not stacks
 
   // can play ace on empty foundation
   if (!to.suit) {
@@ -52,11 +49,17 @@ export function buildDeck() {
       const card = {
         rank,
         suit,
-        faceup: true,
-        location: "DECK",
+        faceup: false,
+        pileIndex: 0,
       };
       deck.push(card);
     });
   });
   return deck;
+}
+
+export function mod(n, m) {
+  // implement modulo that respects negative numbers:
+  // https://stackoverflow.com/questions/4467539/javascript-modulo-gives-a-negative-result-for-negative-numbers
+  return ((n % m) + m) % m;
 }

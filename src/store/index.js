@@ -1,11 +1,12 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import { last, findIndex, shuffle } from "lodash";
+import { last, findIndex, shuffle, clone } from "lodash";
 
 import {
   isFoundationPositionValid,
   isTableauPositionValid,
   buildDeck,
+  mod,
 } from "../utils/utils.js";
 import { Suits, Ranks, GameStates } from "../constants/constants.js";
 
@@ -14,6 +15,7 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     selectedCard: null,
+    cursorPosition: [0, 0], // [pileIndex, positionIndex]
     deck: [],
     waste: [],
     foundations: [[], [], [], []],
@@ -21,82 +23,47 @@ export default new Vuex.Store({
     gameState: GameStates.PLAY,
   },
   mutations: {
+    SET_CURSOR(state, position) {
+      if (state.gameState !== GameStates.PLAY) return;
+
+      Vue.set(state, "cursorPosition", position);
+    },
     SET_SELECTED(state, card) {
-      if (state.gameState !== GameStates.PLAY) return;
+      state.selectedCard = card;
+    },
 
-      state.selectedCard = state.selectedCard == card ? null : card;
-    },
-    MOVE_WASTE(state, { location, pileIndex }) {
-      const top = state.waste.pop();
-      if (!top) return;
-      top.location = location;
-      top.pileIndex = pileIndex;
-      if (location === "TABLEAU") {
-        const newColumn = state.tableau[pileIndex].slice(0);
-        newColumn.push(top);
-        Vue.set(state.tableau, pileIndex, newColumn);
-      } else if (location === "FOUNDATION") {
-        const newColumn = state.foundations[pileIndex].slice(0);
-        newColumn.push(top);
-        Vue.set(state.foundations, pileIndex, newColumn);
-      }
-    },
-    MOVE_FOUNDATION_TO_TABLEAU(state, { from, to }) {
-      const top = state.foundations[from.pileIndex].pop();
-      top.location = to.location;
-      top.pileIndex = to.pileIndex;
-      const newColumn = state.tableau[to.pileIndex].slice(0);
-      newColumn.push(top);
-      Vue.set(state.tableau, to.pileIndex, newColumn);
-    },
-    MOVE_TABLEAU_TO_FOUNDATION(state, { from, to }) {
-      // assume we get only the top card from a tableau stack
-      const fromPile = state.tableau[from.pileIndex];
-      const top = fromPile.pop();
-      top.pileIndex = to.pileIndex;
-      top.location = "FOUNDATION";
-      const stack = state.foundations[to.pileIndex].slice(0);
-      stack.push(top);
-      Vue.set(state.foundations, to.pileIndex, stack);
-      if (last(state.tableau[from.pileIndex]))
-        last(state.tableau[from.pileIndex]).faceup = true;
-    },
-    MOVE_TABLEAU_STACK(state, { from, to }) {
-      // move 1 or more cards from one tableau pile to another
-      let fromPile = state.tableau[from.pileIndex];
-      let toPile = state.tableau[to.pileIndex];
-      const fromIndex = findIndex(
-        fromPile,
-        (card) => card.suit === from.suit && card.rank === from.rank
-      );
-      const stack = fromPile.slice(fromIndex);
-      stack.forEach((card) => {
-        card.pileIndex = to.pileIndex;
-      });
-      toPile = toPile.concat(stack);
-      fromPile = fromPile.slice(0, fromIndex);
-      if (last(fromPile)) last(fromPile).faceup = true;
-      Vue.set(state.tableau, from.pileIndex, fromPile);
-      Vue.set(state.tableau, to.pileIndex, toPile);
-    },
+    // MOVE_TABLEAU_STACK(state, { from, to }) {
+    //   // move 1 or more cards from one tableau pile to another
+    //   let fromPile = state.tableau[from.pileIndex - 6];
+    //   let toPile = state.tableau[to.pileIndex - 6];
+    //   const fromPositionIndex = findIndex(
+    //     fromPile,
+    //     (card) => card.suit === from.suit && card.rank === from.rank
+    //   );
+    //   const stack = fromPile.slice(fromPositionIndex);
+    //   stack.forEach((card) => {
+    //     card.pileIndex = to.pileIndex;
+    //   });
+    //   toPile = toPile.concat(stack);
+    //   fromPile = fromPile.slice(0, fromPositionIndex);
+    //   if (last(fromPile)) last(fromPile).faceup = true;
+    //   Vue.set(state.tableau, from.pileIndex - 6, fromPile);
+    //   Vue.set(state.tableau, to.pileIndex - 6, toPile);
+    // },
     DRAW_CARD(state) {
-      if (state.gameState !== GameStates.PLAY) return;
-
       // turn card from deck to waste
       const top = state.deck.pop();
       if (top) {
-        top.location = "WASTE";
+        top.pileIndex = 1;
         top.faceup = true;
         state.waste.push(top);
       }
     },
     DRAW_CARD_REVERSE(state) {
-      if (state.gameState !== GameStates.PLAY) return;
-
       // turn card from waste to deck
       const top = state.waste.pop();
       if (top) {
-        top.location = "DECK";
+        top.pileIndex = 0;
         top.faceup = false;
         state.deck.push(top);
       }
@@ -105,7 +72,7 @@ export default new Vuex.Store({
       // flip over waste stack to draw stack
       if (state.deck.length === 0 && state.waste.length === 0) return;
       state.waste.forEach((card) => {
-        card.location = "DECK";
+        card.pileIndex = 0;
         card.faceup = false;
       });
       state.waste.reverse();
@@ -120,8 +87,7 @@ export default new Vuex.Store({
         for (let n = 0; n < i + 1; n++) {
           const card = state.deck.pop();
           card.faceup = n == i ? true : false;
-          card.location = "TABLEAU";
-          card.pileIndex = i;
+          card.pileIndex = i + 6;
           state.tableau[i].push(card);
         }
       }
@@ -129,6 +95,7 @@ export default new Vuex.Store({
     RESET(state) {
       // restart game and build deck
       state.selectedCard = null;
+      state.cursorPosition = [0, 0];
       state.foundations = [[], [], [], []];
       state.tableau = [[], [], [], [], [], [], []];
       state.waste = [];
@@ -136,7 +103,7 @@ export default new Vuex.Store({
       state.gameState = GameStates.PLAY;
       state.deck = shuffle(buildDeck());
     },
-    UPDATE_GAME_STATE(state) {
+    END_TURN(state) {
       // check for winning state
       let didWin = true;
       state.foundations.forEach((foundation) => {
@@ -169,6 +136,17 @@ export default new Vuex.Store({
       state.waste = [];
       state.deck = [];
     },
+    REPLACE_PILE(state, { pileIndex, newPile }) {
+      if (pileIndex === 0) {
+        state.deck = newPile;
+      } else if (pileIndex === 1) {
+        state.waste = newPile;
+      } else if (pileIndex > 1 && pileIndex < 6) {
+        Vue.set(state.foundations, pileIndex - 2, newPile);
+      } else if (pileIndex >= 6) {
+        Vue.set(state.tableau, pileIndex - 6, newPile);
+      }
+    },
   },
   getters: {
     selectedCard: (state) => state.selectedCard,
@@ -178,11 +156,76 @@ export default new Vuex.Store({
     tableau: (state) => state.tableau,
     foundations: (state) => state.foundations,
     gameState: (state) => state.gameState,
+    cursorPosition: (state) => state.cursorPosition,
+    cardUnderCursor: (state) => {
+      let pileIndex = state.cursorPosition[0];
+      let positionIndex = state.cursorPosition[1];
+      let card = null;
+      if (pileIndex === 0) {
+        card = last(state.deck);
+      } else if (pileIndex === 1) {
+        card = last(state.waste);
+      } else if (pileIndex > 1 && pileIndex < 6) {
+        let pile = state.foundations[pileIndex - 2];
+        if (pile) card = pile[positionIndex];
+      } else {
+        let pile = state.tableau[pileIndex - 6];
+        if (pile && positionIndex <= pile.length) card = pile[positionIndex];
+      }
+      if (card) {
+        return clone(card);
+      } else {
+        return { pileIndex: pileIndex, rank: null, suit: null };
+      }
+    },
+    getCard: (state) => (cardComponent) => {
+      const suit = cardComponent.suit;
+      const rank = cardComponent.rank;
+      let card = null;
+      for (let i = 0; i < state.tableau.length; i++) {
+        let pile = state.tableau[i];
+        card = pile.find(
+          (element) => element.rank === rank && element.suit === suit
+        );
+        if (card) break;
+      }
+      if (!card) {
+        for (let i = 0; i < state.foundations.length; i++) {
+          let pile = state.foundations[i];
+          card = pile.find(
+            (element) => element.rank === rank && element.suit === suit
+          );
+          if (card) break;
+        }
+      }
+      if (!card) {
+        card = state.deck.find(
+          (element) => element.rank === rank && element.suit === suit
+        );
+      }
+      if (!card) {
+        card = state.waste.find(
+          (element) => element.rank === rank && element.suit === suit
+        );
+      }
+      return clone(card);
+    },
+    pileForCard: (state) => (card) => {
+      if (card.pileIndex === 0) {
+        return state.deck;
+      } else if (card.pileIndex === 1) {
+        return state.waste;
+      } else if (card.pileIndex > 1 && card.pileIndex < 6) {
+        return state.foundations[card.pileIndex - 2];
+      } else {
+        return state.tableau[card.pileIndex - 6];
+      }
+    },
   },
   actions: {
     testWin({ commit }) {
       commit("WIN_TEST");
-      commit("UPDATE_GAME_STATE");
+      commit("END_TURN");
     },
     draw({ commit }) {
       commit("DRAW_CARD");
@@ -200,57 +243,91 @@ export default new Vuex.Store({
       commit("RESET");
       commit("DEAL");
     },
-    playCard({ commit, state }, payload) {
-      // place card on tableau or foundation
-      const from = payload.oldCard;
-      const to = payload.newCard;
+    selectCard({ commit }, card) {
+      commit("SET_SELECTED", card);
+    },
+    moveCursor({ commit, state }, payload) {
+      const xDelta = payload[0];
+      const yDelta = payload[1];
+      const pileIndex = state.cursorPosition[0];
+      const positionIndex = state.cursorPosition[1];
+      let newX = mod(pileIndex + xDelta, 13);
+      let newY = positionIndex + yDelta;
 
-      // return early if move to foundation is invalid
-      if (to.location === "FOUNDATION") {
-        const fromPile =
-          from.location == "TABLEAU" ? state.tableau[from.pileIndex] : null;
-        if (!isFoundationPositionValid(from, to, fromPile)) return;
+      // if the user changes columns, they should default to the top-most card
+      if (xDelta != 0) {
+        newY = 0; // for stock and foundation piles
+        if (newX >= 6) {
+          let pile = state.tableau[newX - 6];
+          newY = pile.length - 1;
+        }
       }
 
-      // return early if move to tableau is invalid
-      if (to.location === "TABLEAU" && !isTableauPositionValid(from, to))
-        return;
-
-      // otherwise, make the move
-      switch (from.location) {
-        case "WASTE":
-          commit("MOVE_WASTE", {
-            location: to.location,
-            pileIndex: to.pileIndex,
-          });
-          break;
-        case "TABLEAU":
-          if (to.location === "TABLEAU") {
-            commit("MOVE_TABLEAU_STACK", {
-              from: from,
-              to: to,
-            });
-          } else if (to.location === "FOUNDATION") {
-            commit("MOVE_TABLEAU_TO_FOUNDATION", {
-              from: from,
-              to: to,
-            });
-          }
-          break;
-        case "FOUNDATION":
-          if (to.location == "TABLEAU") {
-            commit("MOVE_FOUNDATION_TO_TABLEAU", {
-              from: from,
-              to: to,
-            });
-          }
-          break;
+      // make sure we're not allowing the user to move to an array position
+      // that isn't filled with a card
+      if (yDelta != 0) {
+        if (newX >= 6) {
+          let pile = state.tableau[newX - 6];
+          // new pos must be between 0 and pile.length
+          newY = Math.max(0, Math.min(newY, pile.length - 1));
+        } else {
+          newY = 0;
+        }
       }
-      // reset selected card
+
+      const newPos = [newX, newY];
+      commit("SET_CURSOR", newPos);
+    },
+    moveCard({ commit, state, getters }, to) {
+      const from = state.selectedCard;
+      console.log("action to moveCard from and to:", from, to);
+
+      // @TODO is the moving card on the top of its pile?
+
+      const fromPile = clone(getters.pileForCard(from));
+      const toPile = clone(getters.pileForCard(to));
+
+      // do not allow user to move card to same pile
+      if (to.pileIndex === from.pileIndex) return;
+
+      // if move is invalid, select 'to' card
+      if (to.pileIndex > 1 && to.pileIndex < 6) {
+        if (!isFoundationPositionValid(from, to)) {
+          commit("SET_SELECTED", to);
+          return;
+        }
+      } else if (to.pileIndex >= 6) {
+        if (!isTableauPositionValid(from, to)) {
+          commit("SET_SELECTED", to);
+          return;
+        }
+      }
+
+      // move is valid, so make it
+      const card = fromPile.pop();
+      card.pileIndex = to.pileIndex;
+      toPile.push(card);
+
+      // flip last card on from pile faceup
+      const topFrom = last(fromPile);
+      if (topFrom) {
+        topFrom.faceup = true;
+      }
+
+      // update state store
+      commit("REPLACE_PILE", {
+        pileIndex: from.pileIndex,
+        newPile: fromPile,
+      });
+
+      commit("REPLACE_PILE", {
+        pileIndex: to.pileIndex,
+        newPile: toPile,
+      });
+
+      // end turn
       commit("SET_SELECTED", null);
-
-      // end move
-      commit("UPDATE_GAME_STATE");
+      commit("END_TURN");
     },
   },
 });
