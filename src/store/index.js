@@ -254,7 +254,7 @@ export default new Vuex.Store({
       let newX = mod(pileIndex + xDelta, 13);
       let newY = positionIndex + yDelta;
 
-      // if the user changes columns, they should default to the top-most card
+      // if the user changes piles, they should default to the top-most card
       if (xDelta != 0) {
         newY = 0; // for stock and foundation piles
         if (newX >= 6) {
@@ -263,13 +263,16 @@ export default new Vuex.Store({
         }
       }
 
-      // make sure we're not allowing the user to move to an array position
-      // that isn't filled with a card
+      // don't allow user to move to an invalid position
       if (yDelta != 0) {
         if (newX >= 6) {
           let pile = state.tableau[newX - 6];
-          // new pos must be between 0 and pile.length
-          newY = Math.max(0, Math.min(newY, pile.length - 1));
+          // new pos must be between first faceup card's index
+          // and pile.length
+          const firstFaceupIndex = findIndex(pile, function(card) {
+            return card.faceup === true;
+          });
+          newY = Math.max(firstFaceupIndex, Math.min(newY, pile.length - 1));
         } else {
           newY = 0;
         }
