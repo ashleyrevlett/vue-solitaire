@@ -283,7 +283,8 @@ export default new Vuex.Store({
     },
     moveCard({ commit, state, getters }, to) {
       const from = state.selectedCard;
-      console.log("action to moveCard from and to:", from, to);
+      console.log("action to moveCard from:", from);
+      console.log("action to moveCard to:", to);
 
       // @TODO is the moving card on the top of its pile?
 
@@ -291,7 +292,10 @@ export default new Vuex.Store({
       const toPile = clone(getters.pileForCard(to));
 
       // do not allow user to move card to same pile
-      if (to.pileIndex === from.pileIndex) return;
+      if (to.pileIndex === from.pileIndex) {
+        commit("SET_SELECTED", to);
+        return;
+      }
 
       // if move is invalid, select 'to' card
       if (to.pileIndex > 1 && to.pileIndex < 6) {
