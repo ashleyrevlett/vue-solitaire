@@ -15,7 +15,7 @@
 </template>
 
 <script>
-// import { findIndex, clone, last } from "lodash";
+import { findIndex } from "lodash";
 import { mapGetters, mapActions } from "vuex";
 import WinScreen from "./WinScreen.vue";
 import GameCursor from "./GameCursor.vue";
@@ -53,6 +53,7 @@ export default {
       "selectCard",
       "draw",
       "moveCard",
+      "moveStack",
     ]),
     handleCardClick: function(card) {
       /*
@@ -94,8 +95,17 @@ export default {
         // do not select empty waste
         if (card.suit) this.selectCard(card);
       } else {
-        // try to move to tableau and foundation
-        this.moveCard(card);
+        // attempt move to tableau and foundation...
+        // move single card or stack?
+        const fromPile = this.pileForCard(this.selectedCard);
+        const fromCardIndex = findIndex(fromPile, (card) => {
+          return isSameCard(card, this.selectedCard);
+        });
+        if (fromPile.length === fromCardIndex + 1) {
+          this.moveCard(card);
+        } else {
+          this.moveStack(card);
+        }
       }
     },
   },

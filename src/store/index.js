@@ -3,6 +3,7 @@ import Vuex from "vuex";
 import { last, findIndex, shuffle, clone } from "lodash";
 
 import {
+  isSameCard,
   isFoundationPositionValid,
   isTableauPositionValid,
   buildDeck,
@@ -31,25 +32,6 @@ export default new Vuex.Store({
     SET_SELECTED(state, card) {
       state.selectedCard = card;
     },
-
-    // MOVE_TABLEAU_STACK(state, { from, to }) {
-    //   // move 1 or more cards from one tableau pile to another
-    //   let fromPile = state.tableau[from.pileIndex - 6];
-    //   let toPile = state.tableau[to.pileIndex - 6];
-    //   const fromPositionIndex = findIndex(
-    //     fromPile,
-    //     (card) => card.suit === from.suit && card.rank === from.rank
-    //   );
-    //   const stack = fromPile.slice(fromPositionIndex);
-    //   stack.forEach((card) => {
-    //     card.pileIndex = to.pileIndex;
-    //   });
-    //   toPile = toPile.concat(stack);
-    //   fromPile = fromPile.slice(0, fromPositionIndex);
-    //   if (last(fromPile)) last(fromPile).faceup = true;
-    //   Vue.set(state.tableau, from.pileIndex - 6, fromPile);
-    //   Vue.set(state.tableau, to.pileIndex - 6, toPile);
-    // },
     DRAW_CARD(state) {
       // turn card from deck to waste
       const top = state.deck.pop();
@@ -137,6 +119,9 @@ export default new Vuex.Store({
       state.deck = [];
     },
     REPLACE_PILE(state, { pileIndex, newPile }) {
+      newPile.forEach((card) => {
+        card.pileIndex = pileIndex;
+      });
       if (pileIndex === 0) {
         state.deck = newPile;
       } else if (pileIndex === 1) {
@@ -283,11 +268,6 @@ export default new Vuex.Store({
     },
     moveCard({ commit, state, getters }, to) {
       const from = state.selectedCard;
-      console.log("action to moveCard from:", from);
-      console.log("action to moveCard to:", to);
-
-      // @TODO is the moving card on the top of its pile?
-
       const fromPile = clone(getters.pileForCard(from));
       const toPile = clone(getters.pileForCard(to));
 
@@ -330,6 +310,54 @@ export default new Vuex.Store({
       commit("REPLACE_PILE", {
         pileIndex: to.pileIndex,
         newPile: toPile,
+      });
+
+      // end turn
+      commit("SET_SELECTED", null);
+      commit("END_TURN");
+    },
+    moveStack({ commit, state }, to) {
+      // selectedCard is not on the top of its pile
+      const from = state.selectedCard;
+
+      // can only move stacks from and to the tableau
+      if (from.pileIndex < 6 && to.pileIndex < 6) {
+        commit("SET_SELECTED", to);
+        return;
+      }
+
+      // cannot move stack onto itself
+      if (from.pileIndex === to.pileIndex) {
+        commit("SET_SELECTED", to);
+        return;
+      }
+
+      // validate position
+      if (!isTableauPositionValid(from, to)) {
+        commit("SET_SELECTED", to);
+        return;
+      }
+
+      const fromPile = clone(state.tableau[from.pileIndex - 6]);
+      const fromCardIndex = findIndex(fromPile, (card) => {
+        return isSameCard(card, state.selectedCard);
+      });
+      const stack = fromPile.slice(fromCardIndex);
+
+      // move to tableau - move entire stack
+      const newToPile = clone(state.tableau[to.pileIndex - 6]).concat(stack);
+      const newFromPile = fromPile.slice(0, fromCardIndex);
+      if (last(newFromPile)) last(newFromPile).faceup = true;
+
+      // update state store
+      commit("REPLACE_PILE", {
+        pileIndex: from.pileIndex,
+        newPile: newFromPile,
+      });
+
+      commit("REPLACE_PILE", {
+        pileIndex: to.pileIndex,
+        newPile: newToPile,
       });
 
       // end turn
