@@ -1,10 +1,10 @@
 <template>
-  <div class="game-board">
-    <div id="top-row" class="flex justify-between items-start mb-4">
-      <section>
-        <div class="draw-piles flex mr-auto">
-          <Pile key="draw" :cards="deck" :pileIndex="0" />
-          <Pile key="waste" :cards="waste" :pileIndex="1" />
+  <div class="board">
+    <div id="top-row" class="flex">
+      <section :style="{ marginRight: cardWidth + 'px' }">
+        <div class="draw-piles flex">
+          <Pile ref="draw" key="draw" :cards="deck" :pileIndex="0" />
+          <Pile ref="waste" key="waste" :cards="waste" :pileIndex="1" />
         </div>
       </section>
 
@@ -12,6 +12,7 @@
         <Pile
           v-for="(pile, idx) in foundations"
           :key="'foundation-' + idx"
+          :ref="'foundation-' + idx"
           :cards="pile"
           :fanned="false"
           :pileIndex="idx + 2"
@@ -19,10 +20,11 @@
       </section>
     </div>
 
-    <section class="tableau-piles flex justify-between mb-4">
+    <section class="tableau-piles flex">
       <Pile
         v-for="(pile, idx) in tableau"
         :key="'tableau-' + idx"
+        :ref="'tableau-' + idx"
         :cards="pile"
         :fanned="true"
         :pileIndex="idx + 6"
@@ -36,12 +38,12 @@ import { mapGetters } from "vuex";
 import Pile from "./Pile.vue";
 
 export default {
-  name: "GameBoard",
+  name: "Board",
   components: {
     Pile,
   },
   computed: {
-    ...mapGetters(["deck", "waste", "foundations", "tableau"]),
+    ...mapGetters(["deck", "waste", "foundations", "tableau", "cardWidth"]),
   },
 };
 </script>
@@ -50,12 +52,13 @@ export default {
 body {
   padding: 0;
   margin: 0;
-  background: #477148;
-  color: white;
 }
 
-.game-board {
-  padding: 0 3vw;
-  min-height: 100vh;
+.board {
+  height: 100vh;
+  width: 100vw;
+  background: #477148;
+  color: white;
+  overflow: hidden;
 }
 </style>

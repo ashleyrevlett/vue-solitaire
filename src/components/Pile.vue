@@ -1,8 +1,9 @@
 <template>
   <div
-    class="pile mr-4"
+    class="pile"
     :fanned="fanned"
     :class="[fanned ? 'fanned-down' : 'stacked']"
+    :ref="'pile-' + pileIndex"
   >
     <Card
       v-for="d in displayCards"
@@ -35,7 +36,7 @@ export default {
     pileIndex: Number,
   },
   computed: {
-    displayCards: function() {
+    displayCards: function () {
       if (this.fanned) {
         return this.cards;
       } else if (last(this.cards)) {
@@ -52,11 +53,11 @@ export default {
 .pile {
   &.fanned-down {
     .card:not(:first-child) {
-      margin-top: calc(-0.125 * 100vw);
+      margin-top: -105%;
     }
     .card.facedown:not(:first-child),
     .card.facedown + .card.faceup {
-      margin-top: calc(-0.155 * 100vw);
+      margin-top: -135%;
     }
   }
 }

@@ -4,13 +4,13 @@
 
     <game-cursor></game-cursor>
 
-    <div class="tools w-full mb-4">
+    <div class="toolbar w-full mb-4">
       <button @click="redeal">New Game</button>
       <button @click="undo">Undo</button>
       <button @click="testWin">Test Win</button>
     </div>
 
-    <game-board></game-board>
+    <board ref="board"></board>
   </div>
 </template>
 
@@ -19,16 +19,16 @@ import { findIndex } from "lodash";
 import { mapGetters, mapActions } from "vuex";
 import WinScreen from "./WinScreen.vue";
 import GameCursor from "./GameCursor.vue";
-import GameBoard from "./GameBoard.vue";
+import Board from "./Board.vue";
 import { isSameCard } from "../utils/utils";
 import { GameStates } from "../constants/constants.js";
 
 export default {
-  name: "Game",
+  name: "GameController",
   components: {
     WinScreen,
     GameCursor,
-    GameBoard,
+    Board,
   },
   computed: {
     ...mapGetters([
@@ -43,7 +43,6 @@ export default {
       "pileForCard",
     ]),
   },
-
   methods: {
     ...mapActions([
       "redeal",
@@ -55,7 +54,7 @@ export default {
       "moveCard",
       "moveStack",
     ]),
-    handleCardClick: function(card) {
+    handleCardClick: function (card) {
       /*
       Called when 'card-clicked' event is fired by any card or empty cell
       */
@@ -108,17 +107,30 @@ export default {
         }
       }
     },
+    updateCardSize: function (e) {
+      this.$store.commit("SET_CARD_WIDTH", window.innerWidth / 7);
+    },
   },
-  created: function() {
+  created: function () {
     this.redeal();
   },
-  mounted: function() {
+  mounted: function () {
     this.$root.$on("card-click", this.handleCardClick);
+    this.updateCardSize();
+    window.addEventListener("resize", this.updateCardSize);
+  },
+  destroyed: function () {
+    window.removeEventListener("resize", this.updateCardSize);
   },
 };
 </script>
 
 <style lang="scss">
+.toolbar {
+  position: absolute;
+  bottom: 0;
+}
+
 button {
   border: 1px solid white;
   padding: 0.3rem 0.6rem;

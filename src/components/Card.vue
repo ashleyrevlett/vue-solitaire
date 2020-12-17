@@ -9,12 +9,14 @@
       !rank && !suit ? 'empty-pile' : '',
     ]"
     :style="cardStyle"
+    ref="card"
     @click="selectCard"
   ></div>
 </template>
 
 <script>
 import { mapGetters } from "vuex";
+import { isSameCard } from "../utils/utils";
 
 export default {
   name: "Card",
@@ -24,43 +26,57 @@ export default {
     faceup: Boolean,
     pileIndex: Number,
   },
+  data() {
+    return {
+      x: 0,
+      y: 0,
+      width: 0,
+    };
+  },
+  watch: {
+    // pileIndex: function () {
+    //   this.updatePosition();
+    // },
+  },
   computed: {
-    ...mapGetters(["selectedCard", "cursorPosition", "cardUnderCursor"]),
-
-    selected: function() {
-      return (
-        this.selectedCard &&
-        this.selectedCard.rank == this.rank &&
-        this.selectedCard.suit == this.suit
-      );
+    ...mapGetters([
+      "selectedCard",
+      "cursorPosition",
+      "cardUnderCursor",
+      "cardWidth",
+    ]),
+    selected: function () {
+      const isSelected = isSameCard(this.selectedCard, this);
+      if (this.pileIndex && isSelected) return true; // cursor's card will not have pileindex
+      return false;
     },
-    isUnderCursor: function() {
+    isUnderCursor: function () {
       if (!this.rank || !this.suit) {
         // empty card
         if (this.cursorPosition[0] === this.pileIndex) return true;
         else return false;
       } else {
         // normal card
-        if (
-          this.cardUnderCursor &&
-          this.cardUnderCursor.rank == this.rank &&
-          this.cardUnderCursor.suit == this.suit
-        ) {
-          return true;
-        }
-        return false;
+        return isSameCard(this.cardUnderCursor, this);
       }
     },
-    cardStyle: function() {
-      if (!this.suit) return null;
-
-      let src = this.faceup
-        ? require(`@/assets/images/${this.rank.charAt(0) +
-            this.suit.charAt(0)}.svg`)
-        : require(`@/assets/images/BACK2.svg`); //BACK1.PNG, BACK2.SVG, BACK3.PNG
-      return {
-        backgroundImage: "url(" + src + ")",
+    cardStyle: function () {
+      let style = {
+        width: this.cardWidth + "px",
+        backgroundImage: "",
+        paddingBottom: this.cardWidth * 1.4 + "px",
       };
+
+      if (this.suit && this.rank) {
+        let src = this.faceup
+          ? require(`@/assets/images/${
+              this.rank.charAt(0) + this.suit.charAt(0)
+            }.svg`)
+          : require(`@/assets/images/BACK2.svg`); //BACK1.PNG, BACK2.SVG, BACK3.PNG
+        style.backgroundImage = "url(" + src + ")";
+      }
+
+      return style;
     },
   },
   methods: {
@@ -79,8 +95,6 @@ export default {
 
 <style lang="scss">
 .card {
-  width: calc(0.12 * 100vw);
-  padding-bottom: calc(0.12 * 100vw * 1.4);
   background-color: white;
   background-size: contain;
   background-repeat: no-repeat;
@@ -90,7 +104,8 @@ export default {
   cursor: pointer;
 
   &.selected {
-    box-shadow: 0 0 0 3px yellow;
+    // box-shadow: 0 0 0 3px yellow;
+    opacity: 0;
   }
 
   &.highlighted {

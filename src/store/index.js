@@ -22,8 +22,12 @@ export default new Vuex.Store({
     foundations: [[], [], [], []],
     tableau: [[], [], [], [], [], [], []],
     gameState: GameStates.PLAY,
+    cardWidth: 0,
   },
   mutations: {
+    SET_CARD_WIDTH(state, width) {
+      state.cardWidth = width;
+    },
     SET_CURSOR(state, position) {
       if (state.gameState !== GameStates.PLAY) return;
 
@@ -108,7 +112,7 @@ export default new Vuex.Store({
             rank,
             suit,
             faceup: true,
-            location: "DECK",
+            pileIndex: i + 2,
           };
           foundations[i].push(card);
         });
@@ -137,11 +141,11 @@ export default new Vuex.Store({
     selectedCard: (state) => state.selectedCard,
     deck: (state) => state.deck,
     waste: (state) => state.waste,
-    topWaste: (state) => last(state.waste),
     tableau: (state) => state.tableau,
     foundations: (state) => state.foundations,
     gameState: (state) => state.gameState,
     cursorPosition: (state) => state.cursorPosition,
+    cardWidth: (state) => state.cardWidth,
     cardUnderCursor: (state) => {
       let pileIndex = state.cursorPosition[0];
       let positionIndex = state.cursorPosition[1];
@@ -254,7 +258,7 @@ export default new Vuex.Store({
           let pile = state.tableau[newX - 6];
           // new pos must be between first faceup card's index
           // and pile.length
-          const firstFaceupIndex = findIndex(pile, function(card) {
+          const firstFaceupIndex = findIndex(pile, function (card) {
             return card.faceup === true;
           });
           newY = Math.max(firstFaceupIndex, Math.min(newY, pile.length - 1));
