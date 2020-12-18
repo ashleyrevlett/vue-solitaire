@@ -284,12 +284,20 @@ export default new Vuex.Store({
       // if move is invalid, select 'to' card
       if (to.pileIndex > 1 && to.pileIndex < 6) {
         if (!isFoundationPositionValid(from, to)) {
-          commit("SET_SELECTED", to);
+          if (to.suit) {
+            commit("SET_SELECTED", to);
+          } else {
+            commit("SET_SELECTED", null);
+          }
           return;
         }
       } else if (to.pileIndex >= 6) {
         if (!isTableauPositionValid(from, to)) {
-          commit("SET_SELECTED", to);
+          if (to.suit) {
+            commit("SET_SELECTED", to);
+          } else {
+            commit("SET_SELECTED", null);
+          }
           return;
         }
       }
