@@ -15,10 +15,12 @@
     <div class="card-inner">
       <div
         class="card-front side"
+        v-if="suit"
         :style="{ backgroundImage: 'url(' + imageSrc + ')' }"
       ></div>
       <div
         class="card-back side"
+        v-if="suit"
         :style="{
           backgroundImage: 'url(' + require('@/assets/images/BACK2.svg') + ')',
         }"
