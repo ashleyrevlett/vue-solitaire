@@ -11,7 +11,20 @@
     :style="cardStyle"
     ref="card"
     @click="selectCard"
-  ></div>
+  >
+    <div class="card-inner">
+      <div
+        class="card-front side"
+        :style="{ backgroundImage: 'url(' + imageSrc + ')' }"
+      ></div>
+      <div
+        class="card-back side"
+        :style="{
+          backgroundImage: 'url(' + require('@/assets/images/BACK2.svg') + ')',
+        }"
+      ></div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -25,18 +38,6 @@ export default {
     suit: String,
     faceup: Boolean,
     pileIndex: Number,
-  },
-  data() {
-    return {
-      x: 0,
-      y: 0,
-      width: 0,
-    };
-  },
-  watch: {
-    // pileIndex: function () {
-    //   this.updatePosition();
-    // },
   },
   computed: {
     ...mapGetters([
@@ -60,21 +61,21 @@ export default {
         return isSameCard(this.cardUnderCursor, this);
       }
     },
+    imageSrc: function () {
+      if (this.rank && this.suit) {
+        return require(`@/assets/images/${
+          this.rank.charAt(0) + this.suit.charAt(0)
+        }.svg`);
+      } else {
+        // empty pile
+        return "";
+      }
+    },
     cardStyle: function () {
       let style = {
         width: this.cardWidth + "px",
-        backgroundImage: "",
         paddingBottom: this.cardWidth * 1.4 + "px",
       };
-
-      if (this.suit && this.rank) {
-        let src = this.faceup
-          ? require(`@/assets/images/${
-              this.rank.charAt(0) + this.suit.charAt(0)
-            }.svg`)
-          : require(`@/assets/images/BACK2.svg`); //BACK1.PNG, BACK2.SVG, BACK3.PNG
-        style.backgroundImage = "url(" + src + ")";
-      }
 
       return style;
     },
@@ -95,13 +96,13 @@ export default {
 
 <style lang="scss">
 .card {
-  background-color: white;
-  background-size: contain;
-  background-repeat: no-repeat;
-  border-radius: 10px;
+  background-color: transparent;
+  perspective: 1000px; /* Remove this if you don't want the 3D effect */
+  border-radius: 0.7rem;
   position: relative;
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.3);
   cursor: pointer;
+  overflow: hidden;
 
   &.selected {
     // box-shadow: 0 0 0 3px yellow;
@@ -114,11 +115,43 @@ export default {
 
   &.facedown {
     background-size: cover;
+
+    /* Do an horizontal flip when you move the mouse over the flip box container */
+    .card-inner {
+      transform: rotateY(180deg);
+    }
   }
 
   &.empty-pile {
     background: rgba(0, 0, 0, 0.1);
     box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+  }
+
+  /* This container is needed to position the front and back side */
+  .card-inner {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+  }
+
+  /* Position the front and back side */
+  .card-front,
+  .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden; /* Safari */
+    backface-visibility: hidden;
+    background-position: center center;
+    background-size: contain;
+  }
+
+  /* Style the back side */
+  .card-back {
+    transform: rotateY(180deg);
   }
 }
 </style>
