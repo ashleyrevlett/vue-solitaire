@@ -21,7 +21,7 @@ import WinScreen from "./WinScreen.vue";
 import GameCursor from "./GameCursor.vue";
 import Board from "./Board.vue";
 import { isSameCard } from "../utils/utils";
-import { GameStates } from "../constants/constants.js";
+import { GameStates, Layout } from "../constants/constants.js";
 
 export default {
   name: "GameController",
@@ -108,7 +108,11 @@ export default {
       }
     },
     updateCardSize: function (e) {
-      this.$store.commit("SET_CARD_WIDTH", window.innerWidth / 7);
+      const totalPadding = window.innerWidth * Layout.padding;
+      this.$store.commit(
+        "SET_CARD_WIDTH",
+        (window.innerWidth - totalPadding) / 7
+      );
     },
   },
   created: function () {

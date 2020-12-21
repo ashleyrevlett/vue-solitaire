@@ -12,7 +12,7 @@
     ref="card"
     @click="selectCard"
   >
-    <div class="card-inner">
+    <div class="card-inner" v-if="rank && suit">
       <div
         class="card-front side"
         v-if="suit"
@@ -99,26 +99,25 @@ export default {
 <style lang="scss">
 .card {
   background-color: transparent;
-  perspective: 1000px; /* Remove this if you don't want the 3D effect */
+  perspective: 4000px;
   border-radius: 0.7rem;
   position: relative;
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  overflow: hidden;
 
-  &.selected {
+  &.selected:not(.empty-pile) {
     // box-shadow: 0 0 0 3px yellow;
     opacity: 0;
   }
 
   &.highlighted {
-    box-shadow: 0 0 0 3px blue !important;
+    box-shadow: 1px 1px 0.5rem 0.25rem gold !important;
   }
 
   &.facedown {
     background-size: cover;
 
-    /* Do an horizontal flip when you move the mouse over the flip box container */
+    // show card bg on facedown cards
     .card-inner {
       transform: rotateY(180deg);
     }
@@ -135,7 +134,7 @@ export default {
     width: 100%;
     height: 100%;
     text-align: center;
-    transition: transform 0.8s;
+    transition: transform 0.4s;
     transform-style: preserve-3d;
   }
 
@@ -151,7 +150,7 @@ export default {
     background-size: contain;
   }
 
-  /* Style the back side */
+  // show the card back
   .card-back {
     transform: rotateY(180deg);
   }

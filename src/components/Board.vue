@@ -1,7 +1,7 @@
 <template>
   <div class="board">
     <div id="top-row" class="flex">
-      <section :style="{ marginRight: cardWidth + 'px' }">
+      <section :style="{ marginRight: marginRight + 'px' }">
         <div class="draw-piles flex">
           <Pile ref="draw" key="draw" :cards="deck" :pileIndex="0" />
           <Pile ref="waste" key="waste" :cards="waste" :pileIndex="1" />
@@ -35,6 +35,7 @@
 
 <script>
 import { mapGetters } from "vuex";
+import { Layout } from "../constants/constants.js";
 import Pile from "./Pile.vue";
 
 export default {
@@ -44,6 +45,10 @@ export default {
   },
   computed: {
     ...mapGetters(["deck", "waste", "foundations", "tableau", "cardWidth"]),
+    marginRight: function () {
+      const padding = (window.innerWidth * Layout.padding) / 7;
+      return padding + this.cardWidth;
+    },
   },
 };
 </script>

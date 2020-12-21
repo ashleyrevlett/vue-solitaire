@@ -42,3 +42,7 @@ export const GameStates = {
   WIN: "WIN",
   LOSE: "LOSE",
 };
+
+export const Layout = {
+  padding: .08, // space between columns, as percentage of total screen width
+};

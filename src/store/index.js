@@ -275,31 +275,20 @@ export default new Vuex.Store({
       const fromPile = clone(getters.pileForCard(from));
       const toPile = clone(getters.pileForCard(to));
 
-
       // do not allow user to move card to same pile
       if (to.pileIndex === from.pileIndex) {
-        // commit("SET_SELECTED", to);
         commit("SET_SELECTED", null);
         return;
       }
 
-      // if move is invalid, select 'to' card
+      // if move is invalid, cancel card move
       if (to.pileIndex > 1 && to.pileIndex < 6) {
         if (!isFoundationPositionValid(from, to)) {
-          // if (to.suit) {
-          //   commit("SET_SELECTED", to);
-          // } else {
           commit("SET_SELECTED", null);
-          // }
           return;
         }
       } else if (to.pileIndex >= 6) {
         if (!isTableauPositionValid(from, to)) {
-          // if (to.suit) {
-          //   commit("SET_SELECTED", to);
-          // } else {
-          //   commit("SET_SELECTED", null);
-          // }
           commit("SET_SELECTED", null);
           return;
         }

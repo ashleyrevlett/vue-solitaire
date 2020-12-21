@@ -14,7 +14,7 @@
 <script>
 import { last, findIndex } from "lodash";
 import { isSameCard } from "../utils/utils";
-import { GameStates } from "../constants/constants";
+import { GameStates, Layout } from "../constants/constants";
 import { mapGetters } from "vuex";
 import Card from "./Card.vue";
 
@@ -36,11 +36,12 @@ export default {
       return this.cardWidth * 1.4;
     },
     cursorWidth: function () {
-      return this.cardWidth * 0.2;
+      return this.cardWidth;
     },
     cursorStyle: function () {
       const pileIndex = this.cardUnderCursor.pileIndex;
-      const pileWidth = this.cardWidth;
+      const pileWidth =
+        this.cardWidth + (window.innerWidth * Layout.padding) / 7;
 
       // position cursor over horizontal center of correct pile
       let xPos = 0;
@@ -124,23 +125,21 @@ export default {
 
 <style lang="scss">
 .game-cursor {
-  width: 2rem;
   position: absolute;
   transition: 0.2s all;
   z-index: 1;
 
-  img {
-    width: 100%;
-    height: auto;
-  }
-
   .icon-hand {
+    width: 20%;
+    position: absolute;
+    left: 40%;
+    top: 10%;
     z-index: 3;
   }
 
   .ghost-card {
-    margin-left: -200%;
-    margin-top: -200%;
+    transform: scale(1.005, 1.0005);
+    box-shadow: 0.5rem 0.5rem 0.5rem rgba(0, 0, 0, 0.6);
   }
 }
 </style>

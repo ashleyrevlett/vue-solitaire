@@ -3,6 +3,7 @@
     class="pile"
     :fanned="fanned"
     :class="[fanned ? 'fanned-down' : 'stacked']"
+    :style="{ padding: padding / 2 + 'px' }"
     :ref="'pile-' + pileIndex"
   >
     <Card
@@ -24,6 +25,7 @@
 <script>
 import { last } from "lodash";
 import Card from "./Card.vue";
+import { Layout } from "../constants/constants.js";
 
 export default {
   name: "Pile",
@@ -44,6 +46,9 @@ export default {
       } else {
         return null;
       }
+    },
+    padding: function () {
+      return (window.innerWidth * Layout.padding) / 7;
     },
   },
 };
