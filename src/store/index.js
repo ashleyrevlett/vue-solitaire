@@ -235,39 +235,68 @@ export default new Vuex.Store({
     selectCard({ commit }, card) {
       commit("SET_SELECTED", card);
     },
-    moveCursor({ commit, state }, payload) {
+    moveCursor({ commit, state, getters }, payload) {
+      /*
+      x = pileIndex (0-12)
+      y = position in pile (0-pile.length)
+      
+      Piles arrangement on board:
+      # 0  1     2  3  4  5  #
+      # 6  7  8  9  10 11 12 #
+
+      */
+      console.log("run moveCursor");
       const xDelta = payload[0];
       const yDelta = payload[1];
       const pileIndex = state.cursorPosition[0];
       const positionIndex = state.cursorPosition[1];
-      let newX = mod(pileIndex + xDelta, 13);
-      let newY = positionIndex + yDelta;
+      let newPileIndex = mod(pileIndex + xDelta, 13); // change pileIndex and wrap at ends
+      let newPositionIndex = positionIndex + yDelta; // change position in pile OR if move exceeds pile size, change pile
 
-      // if the user changes piles, they should default to the top-most card
-      if (xDelta != 0) {
-        newY = 0; // for stock and foundation piles
-        if (newX >= 6) {
-          let pile = state.tableau[newX - 6];
-          newY = pile.length - 1;
-        }
-      }
-
-      // don't allow user to move to an invalid position
+      // is user moves up or down, change position in pile or change pile itself
       if (yDelta != 0) {
-        if (newX >= 6) {
-          let pile = state.tableau[newX - 6];
-          // new pos must be between first faceup card's index
-          // and pile.length
-          const firstFaceupIndex = findIndex(pile, function (card) {
-            return card.faceup === true;
-          });
-          newY = Math.max(firstFaceupIndex, Math.min(newY, pile.length - 1));
-        } else {
-          newY = 0;
+        // if we're moving within a tableau pile
+        if (newPileIndex >= 6) {
+          let pile = state.tableau[newPileIndex - 6];
+          // check for valid new pos - between first faceup card's index and pile.length
+          // if move would be onto a facedown card, move to the pile above this one
+          const firstFaceupIndex = findIndex(pile, (card) => card.faceup === true);
+          if (newPositionIndex < firstFaceupIndex) {
+            if (newPileIndex <= 7) { // between 6 and 7
+              // move onto first two tableau piles
+              newPileIndex -= 6;
+            } else if (newPileIndex >= 9) { // 9-12
+              // last 4 tableau piles (skip the one with an empty cell above it)
+              newPileIndex -= 7;
+            } else {
+              // clamp the index value to legal positions within pile
+              newPositionIndex = Math.max(firstFaceupIndex, Math.min(newPositionIndex, pile.length - 1));
+            }
+          } else {
+            // move within faceup section of pile
+            const minPos = Math.max(0, firstFaceupIndex);
+            const maxPos = Math.max(0, pile.length - 1);
+            newPositionIndex = Math.min(maxPos, Math.max(minPos, newPositionIndex));
+          }
+        } else if (newPileIndex < 6 && yDelta > 0) {
+          // draw and foundation piles are always flat, so user can only move down a pile
+          if (newPileIndex > 1) {
+            newPileIndex++; // skip empty cell
+          }
+          const newPile = state.tableau[newPileIndex];
+          const firstFaceUp = findIndex(newPile, (card) => card.faceup === true);
+          newPositionIndex = Math.max(0, firstFaceUp);
+          newPileIndex += 6;
         }
       }
 
-      const newPos = [newX, newY];
+      // if the user changes piles, they should default to the top card
+      if (xDelta != 0) {
+        const pile = getters.pileForCard({ pileIndex: newPileIndex });
+        newPositionIndex = Math.max(0, pile.length - 1);
+      }
+
+      const newPos = [newPileIndex, newPositionIndex];
       commit("SET_CURSOR", newPos);
     },
     moveCard({ commit, state, getters }, to) {
