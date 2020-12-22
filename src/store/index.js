@@ -290,6 +290,12 @@ export default new Vuex.Store({
         }
       }
 
+      // in case we changed to the top row, we need to reset to the top card
+      if (newPileIndex < 6) {
+        const pile = getters.pileForCard({ pileIndex: newPileIndex });
+        newPositionIndex = Math.max(0, pile.length - 1);
+      }
+
       // if the user changes piles, they should default to the top card
       if (xDelta != 0) {
         const pile = getters.pileForCard({ pileIndex: newPileIndex });
