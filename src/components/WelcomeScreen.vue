@@ -1,11 +1,12 @@
 <template>
-  <div class="winScreen">
+  <div class="welcomeScreen">
     <div class="panel">
-      <h1>
-        Congratulations!<br />
-        You Win!
-      </h1>
-      <button @click="redeal">Play Again</button>
+      <h1>Welcome to Solitaire!</h1>
+      <button @click="redeal">New Game</button>
+      <p>
+        Games Won: XX<br />
+        High Score: X:XX
+      </p>
     </div>
   </div>
 </template>
@@ -14,7 +15,7 @@
 import { mapActions } from "vuex";
 
 export default {
-  name: "WinScreen",
+  name: "WelcomeScreen",
   methods: {
     ...mapActions(["redeal"]),
   },
@@ -22,7 +23,7 @@ export default {
 </script>
 
 <style lang="scss">
-.winScreen {
+.welcomeScreen {
   position: absolute;
   width: 100vw;
   height: 100vh;

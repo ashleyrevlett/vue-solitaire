@@ -21,12 +21,11 @@ export default new Vuex.Store({
     waste: [],
     foundations: [[], [], [], []],
     tableau: [[], [], [], [], [], [], []],
-    gameState: GameStates.PLAY,
-    cardWidth: 0,
+    gameState: GameStates.Welcome,
   },
   mutations: {
-    SET_CARD_WIDTH(state, width) {
-      state.cardWidth = width;
+    SET_GAMESTATE(state, newValue) {
+      state.gameState = newValue;
     },
     SET_CURSOR(state, position) {
       if (state.gameState !== GameStates.PLAY) return;
@@ -145,7 +144,6 @@ export default new Vuex.Store({
     foundations: (state) => state.foundations,
     gameState: (state) => state.gameState,
     cursorPosition: (state) => state.cursorPosition,
-    cardWidth: (state) => state.cardWidth,
     cardUnderCursor: (state) => {
       let pileIndex = state.cursorPosition[0];
       let positionIndex = state.cursorPosition[1];

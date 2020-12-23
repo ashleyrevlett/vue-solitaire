@@ -1,39 +1,43 @@
 <template>
   <div class="game">
-    <win-screen v-if="gameState == 'WIN'" />
+    <welcome-screen v-if="gameState == 'WELCOME'" />
 
-    <game-cursor></game-cursor>
+    <win-screen v-else-if="gameState == 'WIN'" />
 
-    <div class="toolbar w-full mb-4">
-      <button @click="redeal">New Game</button>
-      <button @click="undo">Undo</button>
-      <button @click="testWin">Test Win</button>
-    </div>
+    <div v-else>
+      <game-cursor></game-cursor>
 
-    <div class="board">
-      <section id="top-row" class="flex">
-        <Pile ref="pile0" key="pile-0" :cards="deck" :pileIndex="0" />
-        <Pile ref="pile1" key="pile-1" :cards="waste" :pileIndex="1" />
-        <div class="pile"><!-- fake pile --></div>
-        <Pile
-          v-for="(pile, idx) in foundations"
-          :key="'pile-' + (idx + 2)"
-          :ref="'pile' + (idx + 2)"
-          :cards="pile"
-          :fanned="false"
-          :pileIndex="idx + 2"
-        />
-      </section>
-      <section class="tableau-piles flex">
-        <Pile
-          v-for="(pile, idx) in tableau"
-          :key="'pile-' + (idx + 6)"
-          :ref="'pile' + (idx + 6)"
-          :cards="pile"
-          :fanned="true"
-          :pileIndex="idx + 6"
-        />
-      </section>
+      <div class="toolbar w-full mb-4">
+        <button @click="redeal">New Game</button>
+        <button @click="undo">Undo</button>
+        <button @click="testWin">Test Win</button>
+      </div>
+
+      <div class="board">
+        <section id="top-row" class="flex">
+          <Pile ref="pile0" key="pile-0" :cards="deck" :pileIndex="0" />
+          <Pile ref="pile1" key="pile-1" :cards="waste" :pileIndex="1" />
+          <div class="pile"><!-- fake pile --></div>
+          <Pile
+            v-for="(pile, idx) in foundations"
+            :key="'pile-' + (idx + 2)"
+            :ref="'pile' + (idx + 2)"
+            :cards="pile"
+            :fanned="false"
+            :pileIndex="idx + 2"
+          />
+        </section>
+        <section class="tableau-piles flex">
+          <Pile
+            v-for="(pile, idx) in tableau"
+            :key="'pile-' + (idx + 6)"
+            :ref="'pile' + (idx + 6)"
+            :cards="pile"
+            :fanned="true"
+            :pileIndex="idx + 6"
+          />
+        </section>
+      </div>
     </div>
   </div>
 </template>
@@ -41,15 +45,17 @@
 <script>
 import { findIndex } from "lodash";
 import { mapGetters, mapActions } from "vuex";
+import WelcomeScreen from "./WelcomeScreen.vue";
 import WinScreen from "./WinScreen.vue";
 import GameCursor from "./GameCursor.vue";
 import Pile from "./Pile.vue";
 import { isSameCard } from "../utils/utils";
-import { GameStates, Layout } from "../constants/constants.js";
+import { GameStates } from "../constants/constants.js";
 
 export default {
   name: "GameController",
   components: {
+    WelcomeScreen,
     WinScreen,
     GameCursor,
     Pile,
@@ -133,7 +139,7 @@ export default {
     },
   },
   created: function () {
-    this.redeal();
+    this.$store.commit("SET_GAMESTATE", GameStates.WELCOME);
   },
   mounted: function () {
     this.$root.$on("card-click", this.handleCardClick);
