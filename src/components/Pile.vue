@@ -26,7 +26,6 @@
 <script>
 import { last } from "lodash";
 import Card from "./Card.vue";
-import { Layout } from "../constants/constants.js";
 
 export default {
   name: "Pile",
@@ -49,7 +48,7 @@ export default {
       }
     },
     padding: function () {
-      return (window.innerWidth * Layout.padding) / 7;
+      return (window.innerWidth * 0.08) / 7;
     },
   },
 };

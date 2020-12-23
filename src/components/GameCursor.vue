@@ -14,7 +14,7 @@
 <script>
 import { last, findIndex } from "lodash";
 import { isSameCard } from "../utils/utils";
-import { GameStates, Layout } from "../constants/constants";
+import { GameStates } from "../constants/constants";
 import { mapGetters } from "vuex";
 import Card from "./Card.vue";
 
@@ -65,7 +65,7 @@ export default {
     },
     cursorStyle: function () {
       // position at same spot as card under cursor
-      if (!this.elementUnderCursor) return;
+      if (!this.isMounted || !this.elementUnderCursor) return;
 
       const xPos = this.elementUnderCursor.x;
       const yPos =
