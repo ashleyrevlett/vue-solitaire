@@ -10,7 +10,31 @@
       <button @click="testWin">Test Win</button>
     </div>
 
-    <board ref="board"></board>
+    <div class="board">
+      <section id="top-row" class="flex">
+        <Pile ref="pile0" key="pile-0" :cards="deck" :pileIndex="0" />
+        <Pile ref="pile1" key="pile-1" :cards="waste" :pileIndex="1" />
+        <div class="pile"><!-- fake pile --></div>
+        <Pile
+          v-for="(pile, idx) in foundations"
+          :key="'pile-' + (idx + 2)"
+          :ref="'pile' + (idx + 2)"
+          :cards="pile"
+          :fanned="false"
+          :pileIndex="idx + 2"
+        />
+      </section>
+      <section class="tableau-piles flex">
+        <Pile
+          v-for="(pile, idx) in tableau"
+          :key="'pile-' + (idx + 6)"
+          :ref="'pile' + (idx + 6)"
+          :cards="pile"
+          :fanned="true"
+          :pileIndex="idx + 6"
+        />
+      </section>
+    </div>
   </div>
 </template>
 
@@ -19,7 +43,7 @@ import { findIndex } from "lodash";
 import { mapGetters, mapActions } from "vuex";
 import WinScreen from "./WinScreen.vue";
 import GameCursor from "./GameCursor.vue";
-import Board from "./Board.vue";
+import Pile from "./Pile.vue";
 import { isSameCard } from "../utils/utils";
 import { GameStates, Layout } from "../constants/constants.js";
 
@@ -28,7 +52,7 @@ export default {
   components: {
     WinScreen,
     GameCursor,
-    Board,
+    Pile,
   },
   computed: {
     ...mapGetters([
@@ -107,29 +131,31 @@ export default {
         }
       }
     },
-    updateCardSize: function (e) {
-      const totalPadding = window.innerWidth * Layout.padding;
-      this.$store.commit(
-        "SET_CARD_WIDTH",
-        (window.innerWidth - totalPadding) / 7
-      );
-    },
   },
   created: function () {
     this.redeal();
   },
   mounted: function () {
     this.$root.$on("card-click", this.handleCardClick);
-    this.updateCardSize();
-    window.addEventListener("resize", this.updateCardSize);
   },
-  destroyed: function () {
-    window.removeEventListener("resize", this.updateCardSize);
-  },
+  destroyed: function () {},
 };
 </script>
 
 <style lang="scss">
+body {
+  padding: 0;
+  margin: 0;
+}
+
+.board {
+  height: 100vh;
+  width: 100vw;
+  background: #477148;
+  color: white;
+  overflow: hidden;
+}
+
 .toolbar {
   position: absolute;
   bottom: 0;

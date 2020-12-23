@@ -8,7 +8,6 @@
       isUnderCursor ? 'highlighted' : '',
       !rank && !suit ? 'empty-pile' : '',
     ]"
-    :style="cardStyle"
     ref="card"
     @click="selectCard"
   >
@@ -42,12 +41,7 @@ export default {
     pileIndex: Number,
   },
   computed: {
-    ...mapGetters([
-      "selectedCard",
-      "cursorPosition",
-      "cardUnderCursor",
-      "cardWidth",
-    ]),
+    ...mapGetters(["selectedCard", "cursorPosition", "cardUnderCursor"]),
     selected: function () {
       const isSelected = isSameCard(this.selectedCard, this);
       if (this.pileIndex && isSelected) return true; // cursor's card will not have pileindex
@@ -73,14 +67,6 @@ export default {
         return "";
       }
     },
-    cardStyle: function () {
-      let style = {
-        width: this.cardWidth + "px",
-        paddingBottom: this.cardWidth * 1.4 + "px",
-      };
-
-      return style;
-    },
   },
   methods: {
     selectCard() {
@@ -101,6 +87,7 @@ export default {
   background-color: transparent;
   perspective: 4000px;
   border-radius: 0.7rem;
+  padding-bottom: 140%;
   position: relative;
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.3);
   cursor: pointer;

@@ -4,11 +4,11 @@
     :fanned="fanned"
     :class="[fanned ? 'fanned-down' : 'stacked']"
     :style="{ padding: padding / 2 + 'px' }"
-    :ref="'pile-' + pileIndex"
   >
     <Card
       v-for="d in displayCards"
       :key="d.rank + '-' + d.suit"
+      ref="displayCards"
       :faceup="d.faceup"
       :suit="d.suit"
       :rank="d.rank"
@@ -17,6 +17,7 @@
     <Card
       v-if="!displayCards || displayCards.length === 0"
       :key="'empty-' + pileIndex"
+      ref="empty"
       :faceup="false"
       :pileIndex="pileIndex"
     />
@@ -56,6 +57,8 @@ export default {
 
 <style lang="scss">
 .pile {
+  width: 100%;
+
   &.fanned-down {
     .card:not(:first-child) {
       margin-top: -105%;

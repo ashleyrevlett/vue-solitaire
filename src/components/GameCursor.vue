@@ -23,71 +23,57 @@ export default {
   components: {
     Card,
   },
+  data: function () {
+    return {
+      isMounted: false,
+    };
+  },
   computed: {
     ...mapGetters([
       "selectedCard",
       "cardUnderCursor",
-      "cardWidth",
       "gameState",
       "cursorPosition",
       "pileForCard",
     ]),
-    cardHeight: function () {
-      return this.cardWidth * 1.4;
-    },
-    cursorWidth: function () {
-      return this.cardWidth;
+    elementUnderCursor: function () {
+      if (!this.isMounted || !this.cardUnderCursor || !this.$parent.$refs)
+        return null;
+
+      const pileName = "pile" + this.cardUnderCursor.pileIndex;
+      let pile = this.$parent.$refs[pileName];
+      if (!pile) return;
+
+      if (this.cardUnderCursor.pileIndex > 1) {
+        pile = pile[0]; // because these piles are generated using v-for, their refs are created as one-item arrays
+      }
+
+      let card = null;
+      if (pile.$refs.displayCards) {
+        const cards = pile.$refs.displayCards;
+        const selectedCardIndex = findIndex(cards, (card) => {
+          return isSameCard(card, this.cardUnderCursor);
+        });
+        if (selectedCardIndex < 0) return;
+
+        card = cards[selectedCardIndex].$refs.card;
+      } else {
+        card = pile.$refs.empty.$refs.card;
+      }
+
+      return card.getBoundingClientRect();
     },
     cursorStyle: function () {
-      const pileIndex = this.cardUnderCursor.pileIndex;
-      const pileWidth =
-        this.cardWidth + (window.innerWidth * Layout.padding) / 7;
+      // position at same spot as card under cursor
+      if (!this.elementUnderCursor) return;
 
-      // position cursor over horizontal center of correct pile
-      let xPos = 0;
-      if (pileIndex < 7) {
-        xPos =
-          (pileIndex % 6) * pileWidth + pileWidth / 2 - this.cursorWidth / 2;
-      } else {
-        xPos =
-          ((pileIndex - 6) % 7) * pileWidth +
-          pileWidth / 2 -
-          this.cursorWidth / 2;
-      }
-
-      // account for empty cell in top row
-      if (pileIndex > 1 && pileIndex < 6) {
-        xPos += pileWidth;
-      }
-
-      // position cursor in  vertical center of visible portion of card
-      let yPos = this.cardHeight * 0.25;
-      if (pileIndex >= 6) {
-        yPos += this.cardHeight; // 2nd row
-
-        const faceUpOffset = 0.26 * this.cardHeight;
-        const faceDownOffset = 0.0358 * this.cardHeight;
-        const pile = this.pileForCard(this.cardUnderCursor);
-        const cardIndex = this.cursorPosition[1];
-        const firstFaceupIndex = findIndex(pile, function (card) {
-          return card.faceup === true;
-        });
-        for (let i = 0; i < firstFaceupIndex; i++) {
-          yPos += faceDownOffset;
-        }
-        for (let j = firstFaceupIndex; j < cardIndex; j++) {
-          yPos += faceUpOffset;
-        }
-        // if not on top of pile then move cursor up a bit
-        if (cardIndex != pile.length) {
-          yPos -= 10;
-        }
-      }
-
+      const xPos = this.elementUnderCursor.x;
+      const yPos =
+        this.elementUnderCursor.y + this.elementUnderCursor.height * 0.17;
       return {
         left: xPos + "px",
         top: yPos + "px",
-        width: this.cursorWidth + "px",
+        width: this.elementUnderCursor.width + "px",
       };
     },
   },
@@ -119,6 +105,10 @@ export default {
   },
   beforeDestroy() {
     document.removeEventListener("keydown", this.keyPress);
+  },
+  mounted() {
+    // we use refs in a computed property, so we need to know if they've been mounted yet
+    this.isMounted = true;
   },
 };
 </script>
